@@ -1,7 +1,6 @@
-const gitRevSync = __non_webpack_require__("git-rev-sync");
+const { execSync } = require('child_process');
 
 export default () => {
-  const webRevision = gitRevSync.short();
-
+  var webRevision = execSync('git rev-parse --short HEAD').toString().trim();
   return `module.exports = ${JSON.stringify({ webRevision })}`;
 };
