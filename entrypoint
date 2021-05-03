@@ -1,0 +1,23 @@
+#!/bin/bash
+
+env_fail=0
+if [[ -z "$NGINX_SERVER_NAME" ]]; then
+  echo '$NGINX_SERVER_NAME must be defined in the environment' >&2
+  env_fail=1
+fi
+
+if [[ -z "$SENSU_BACKEND_URI" ]]; then
+  echo '$SENSU_BACKEND_URI must be defined in the environment' >&2
+  env_fail=1
+fi
+
+if [[ "$env_fail" == '1' ]]; then
+  exit 1
+fi
+
+set -x
+envsubst '$${NGINX_SERVER_NAME} $${SENSU_BACKEND_URI}' \
+  < /etc/nginx/nginx.conf.tmpl \
+  > /etc/nginx/nginx.conf
+
+exec nginx -g 'daemon off;'

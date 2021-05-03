@@ -1,0 +1,52 @@
+user  nginx;
+worker_processes  auto;
+
+error_log  /dev/stderr notice;
+pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+  include       /etc/nginx/mime.types;
+  default_type  application/octet-stream;
+
+  log_format json_full escape=json
+    '{'
+      '"@timestamp":"$time_iso8601",'
+      '"bytes_sent":$bytes_sent,'
+      '"headers":{"User-Agent":"$http_user_agent","X-Forwarded-For":"$http_x_forwarded_for"},'
+      '"remote_addr":"$remote_addr",'
+      '"request_id":"$request_id",'
+      '"request_length":$request_length,'
+      '"request_method":"$request_method",'
+      '"request_time":$request_time,'
+      '"request_uri":"$request_uri",'
+      '"server_name":"$server_name",'
+      '"server_protocol":"$server_protocol",'
+      '"status": $status,'
+      '"uri":"$uri"'
+    '}';
+
+  access_log        /dev/stdout json_full;
+  sendfile          on;
+  keepalive_timeout 65;
+
+
+  server {
+    listen      80;
+    server_name $NGINX_SERVER_NAME;
+    root        /app;
+
+    location / {
+      try_files $uri $uri/index.html @sensubackend;
+    }
+
+    location @sensubackend {
+      proxy_pass ${SENSU_BACKEND_URI};
+    }
+  }
+}
