@@ -1,0 +1,16 @@
+#!/bin/bash
+
+script_dir=$(dirname "$0")
+cd "$script_dir" || exit 1
+
+if [[ "$IN_NODE_DOCKER" != '1' ]]; then
+  docker run \
+    --user "$(id -u)" \
+    -e IN_NODE_DOCKER=1 \
+    -v "$PWD:/app" \
+    --rm -it \
+    --entrypoint /app/build-app node:16.0.0
+else
+  rm -rf build/
+  yarn run build --mode production
+fi
